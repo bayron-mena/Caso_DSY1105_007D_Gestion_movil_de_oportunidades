@@ -1,6 +1,5 @@
-package com.example.caso_dsy1105_007d_gestion_movil_de_oportunidades.ui.theme
+package com.example.caso_dsy1105_007d_gestion_movil_de_oportunidades.ui.theme.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -10,6 +9,13 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import com.example.caso_dsy1105_007d_gestion_movil_de_oportunidades.ui.theme.Pink40
+import com.example.caso_dsy1105_007d_gestion_movil_de_oportunidades.ui.theme.Pink80
+import com.example.caso_dsy1105_007d_gestion_movil_de_oportunidades.ui.theme.Purple40
+import com.example.caso_dsy1105_007d_gestion_movil_de_oportunidades.ui.theme.Purple80
+import com.example.caso_dsy1105_007d_gestion_movil_de_oportunidades.ui.theme.PurpleGrey40
+import com.example.caso_dsy1105_007d_gestion_movil_de_oportunidades.ui.theme.PurpleGrey80
+import com.example.caso_dsy1105_007d_gestion_movil_de_oportunidades.ui.theme.Typography
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,

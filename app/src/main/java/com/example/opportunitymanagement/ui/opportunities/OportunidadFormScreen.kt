@@ -3,7 +3,7 @@ package com.example.opportunitymanagement.ui.opportunities
 import com.example.opportunitymanagement.ui.theme.Caso_DSY1105_007D_Gestion_movil_de_oportunidadesTheme
 import com.example.opportunitymanagement.viewmodel.OportunidadUiState
 import com.example.opportunitymanagement.viewmodel.Opciones
-import com.example.opportunitymanagement.viewmodel.validar
+import com.example.opportunitymanagement.viewmodel.OportunidadValidator
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -20,7 +20,15 @@ import com.example.opportunitymanagement.data.local.OportunidadEntity
 @Composable
 fun OportunidadFormScreen(
     s: OportunidadUiState,
-    cambiar: (String, String) -> Unit,
+    onNombreChange: (String) -> Unit,
+    onTipoChange: (String) -> Unit,
+    onDescripcionChange: (String) -> Unit,
+    onFuenteChange: (String) -> Unit,
+    onPrioridadChange: (String) -> Unit,
+    onPotencialChange: (String) -> Unit,
+    onEstadoChange: (String) -> Unit,
+    onObservacionesChange: (String) -> Unit,
+    onReferenciaGeograficaChange: (String) -> Unit,
     guardar: () -> Unit,
     volver: () -> Unit
 ) {
@@ -51,73 +59,67 @@ fun OportunidadFormScreen(
             if (s.cargando) CircularProgressIndicator()
             s.mensaje?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             val activo = !s.guardando && !s.cargando && !s.cargaFallida
-            CampoTexto("Nombre *", s.nombre, s.errores["nombre"], activo) { cambiar("nombre", it) }
+            CampoTexto("Nombre *", s.nombre, s.nombreError, activo) { onNombreChange(it) }
             CampoSeleccion(
                 "Tipo *",
                 s.tipo,
                 Opciones.tipos,
-                s.errores["tipo"],
+                s.tipoError,
                 activo
-            ) { cambiar("tipo", it) }
+            ) { onTipoChange(it) }
             CampoTexto(
                 "Descripción *",
                 s.descripcion,
-                s.errores["descripcion"],
+                s.descripcionError,
                 activo,
                 true
-            ) { cambiar("descripcion", it) }
+            ) { onDescripcionChange(it) }
             CampoTexto(
                 "Fuente de información *",
                 s.fuente,
-                s.errores["fuente"],
+                s.fuenteError,
                 activo
-            ) { cambiar("fuente", it) }
+            ) { onFuenteChange(it) }
             CampoSeleccion(
                 "Prioridad *",
                 s.prioridad,
                 Opciones.prioridades,
-                s.errores["prioridad"],
+                s.prioridadError,
                 activo
-            ) { cambiar("prioridad", it) }
+            ) { onPrioridadChange(it) }
             CampoSeleccion(
                 "Potencial comercial *",
                 s.potencial,
                 Opciones.potenciales,
-                s.errores["potencial"],
+                s.potencialError,
                 activo
-            ) { cambiar("potencial", it) }
+            ) { onPotencialChange(it) }
             CampoSeleccion(
                 "Estado de gestión *",
                 s.estado,
                 Opciones.estados,
-                s.errores["estado"],
+                s.estadoError,
                 activo
-            ) { cambiar("estado", it) }
+            ) { onEstadoChange(it) }
             CampoTexto(
                 "Observaciones",
                 s.observaciones,
                 null,
                 activo,
                 true
-            ) { cambiar("observaciones", it) }
+            ) { onObservacionesChange(it) }
             Text(
                 "Referencia geográfica de prueba (opcional)",
                 style = MaterialTheme.typography.titleSmall
             )
             Text(s.referenciaGeografica.ifBlank { "Sin referencia asociada" })
             OutlinedButton(onClick = {
-                cambiar(
-                    "referenciaGeografica",
-                    "Puente Alto · Región Metropolitana (referencia ficticia)"
-                )
+                onReferenciaGeograficaChange("Puente Alto · Región Metropolitana (referencia ficticia)")
             }, enabled = activo) { Text("Usar ubicación de prueba") }
             if (s.referenciaGeografica.isNotBlank()) TextButton(onClick = {
-                cambiar(
-                    "referenciaGeografica",
-                    ""
-                )
+                onReferenciaGeograficaChange("")
             }, enabled = activo) { Text("Quitar referencia") }
-            if (s.errores.isNotEmpty()) Text(
+            if (OportunidadValidator().tieneErrores(s)) Text(
                 "Revisa los campos marcados antes de continuar.",
                 color = MaterialTheme.colorScheme.error
             )
@@ -137,17 +139,29 @@ fun OportunidadFormScreen(
 @Preview(showBackground = true, heightDp = 1800)
 @Composable
 private fun FormPreview() {
-    Caso_DSY1105_007D_Gestion_movil_de_oportunidadesTheme { OportunidadFormScreen(OportunidadUiState(), { _, _ -> }, {}, {}) }
+    Caso_DSY1105_007D_Gestion_movil_de_oportunidadesTheme { FormularioPreview(OportunidadUiState()) }
 }
 
 @Preview(showBackground = true, heightDp = 1800)
 @Composable
 private fun ErroresPreview() {
-    Caso_DSY1105_007D_Gestion_movil_de_oportunidadesTheme {
-        OportunidadFormScreen(
-            OportunidadUiState(errores = validar(OportunidadUiState())),
-            { _, _ -> },
-            {},
-            {})
-    }
+    Caso_DSY1105_007D_Gestion_movil_de_oportunidadesTheme { FormularioPreview(OportunidadValidator().validar(OportunidadUiState())) }
+}
+
+@Composable
+private fun FormularioPreview(s: OportunidadUiState) {
+    OportunidadFormScreen(
+        s = s,
+        onNombreChange = { },
+        onTipoChange = {},
+        onDescripcionChange = {},
+        onFuenteChange = {},
+        onPrioridadChange = {},
+        onPotencialChange = {},
+        onEstadoChange = {},
+        onObservacionesChange = {},
+        onReferenciaGeograficaChange = {},
+        guardar = {},
+        volver = {}
+    )
 }

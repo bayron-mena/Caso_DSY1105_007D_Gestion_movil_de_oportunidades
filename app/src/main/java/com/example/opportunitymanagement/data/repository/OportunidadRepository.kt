@@ -9,4 +9,7 @@ class OportunidadRepository(private val dao: OportunidadDao) {
   check(dao.actualizar(item) == 1) { "La oportunidad ya no existe" }
   return item.id
  }
+ suspend fun eliminar(id: Long){
+  check(dao.eliminar(id)==1){"la oportunidad ya existe"}
+ }
 }

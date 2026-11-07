@@ -1,11 +1,63 @@
 package com.example.opportunitymanagement.viewmodel
 
-fun validar(s: OportunidadUiState): Map<String, String> = buildMap {
- if (s.nombre.isBlank()) put("nombre", "Ingresa el nombre de la oportunidad")
- if (s.descripcion.isBlank()) put("descripcion", "Ingresa una descripción")
- if (s.fuente.isBlank()) put("fuente", "Indica la fuente de información")
- if (s.tipo !in Opciones.tipos) put("tipo", "Selecciona un tipo válido")
- if (s.prioridad !in Opciones.prioridades) put("prioridad", "Selecciona una prioridad")
- if (s.potencial !in Opciones.potenciales) put("potencial", "Selecciona un potencial válido")
- if (s.estado !in Opciones.estados) put("estado", "Selecciona un estado válido")
+class OportunidadValidator {
+
+    fun nombreError(nombre: String): String? = when {
+        nombre.isBlank() -> "Ingresa el nombre de la oportunidad"
+        else -> null
+    }
+
+    fun tipoError(tipo: String): String? = when {
+        tipo.isBlank() -> "Selecciona un tipo"
+        tipo !in Opciones.tipos -> "Selecciona un tipo válido"
+        else -> null
+    }
+
+    fun descripcionError(descripcion: String): String? = when {
+        descripcion.isBlank() -> "Ingresa una descripción"
+        else -> null
+    }
+
+    fun fuenteError(fuente: String): String? = when {
+        fuente.isBlank() -> "Indica la fuente de información"
+        else -> null
+    }
+
+    fun prioridadError(prioridad: String): String? = when {
+        prioridad.isBlank() -> "Selecciona una prioridad"
+        prioridad !in Opciones.prioridades -> "Selecciona una prioridad válida"
+        else -> null
+    }
+
+    fun potencialError(potencial: String): String? = when {
+        potencial.isBlank() -> "Selecciona un potencial"
+        potencial !in Opciones.potenciales -> "Selecciona un potencial válido"
+        else -> null
+    }
+
+    fun estadoError(estado: String): String? = when {
+        estado.isBlank() -> "Selecciona un estado"
+        estado !in Opciones.estados -> "Selecciona un estado válido"
+        else -> null
+    }
+
+    fun validar(state: OportunidadUiState): OportunidadUiState = state.copy(
+        nombreError = nombreError(state.nombre),
+        tipoError = tipoError(state.tipo),
+        descripcionError = descripcionError(state.descripcion),
+        fuenteError = fuenteError(state.fuente),
+        prioridadError = prioridadError(state.prioridad),
+        potencialError = potencialError(state.potencial),
+        estadoError = estadoError(state.estado)
+    )
+
+    fun tieneErrores(state: OportunidadUiState): Boolean = listOf(
+        state.nombreError,
+        state.tipoError,
+        state.descripcionError,
+        state.fuenteError,
+        state.prioridadError,
+        state.potencialError,
+        state.estadoError
+    ).any { it != null }
 }

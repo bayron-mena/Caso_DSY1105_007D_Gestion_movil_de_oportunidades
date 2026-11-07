@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
@@ -20,8 +21,26 @@ fun ListaOportunidadesScreen(
     s: ListaUiState,
     agregar: () -> Unit,
     editar: (Long) -> Unit,
+    eliminar: (Long) -> Unit,
     volver: () -> Unit
 ) {
+    // Oportunidad que espera confirmación; es estado visual, por eso vive en la pantalla.
+    var porEliminar by remember { mutableStateOf<OportunidadEntity?>(null) }
+
+    porEliminar?.let { o ->
+        AlertDialog(
+            onDismissRequest = { porEliminar = null },
+            title = { Text("Eliminar oportunidad") },
+            text = { Text("¿Seguro que quieres eliminar \"${o.nombre}\"? Esta acción no se puede deshacer.") },
+            confirmButton = {
+                TextButton(onClick = { eliminar(o.id); porEliminar = null }) {
+                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = { TextButton(onClick = { porEliminar = null }) { Text("Cancelar") } }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -52,20 +71,35 @@ fun ListaOportunidadesScreen(
             }
             if (s.cargando) item { CircularProgressIndicator() }
             if (s.error != null) item { Text(s.error, color = MaterialTheme.colorScheme.error) }
+            if (s.mensaje != null) item { Text(s.mensaje, color = MaterialTheme.colorScheme.error) }
             if (!s.cargando && s.error == null && s.items.isEmpty()) item {
                 Text(
                     "Aún no tienes oportunidades. Registra la primera para comenzar.",
                     Modifier.padding(vertical = 36.dp)
                 )
             }
-            items(s.items, key = { it.id }) { o -> OportunidadCard(o) { editar(o.id) } }
+            items(s.items, key = { it.id }) { o ->
+                OportunidadCard(
+                    o = o,
+                    abrir = { editar(o.id) },
+                    eliminar = { porEliminar = o },
+                    eliminando = s.eliminandoId == o.id,
+                    habilitado = s.eliminandoId == null
+                )
+            }
         }
     }
 }
 
 @Composable
-fun OportunidadCard(o: OportunidadEntity, abrir: () -> Unit) {
-    Card(onClick = abrir, modifier = Modifier.fillMaxWidth()) {
+fun OportunidadCard(
+    o: OportunidadEntity,
+    abrir: () -> Unit,
+    eliminar: () -> Unit,
+    eliminando: Boolean = false,
+    habilitado: Boolean = true
+) {
+    Card(onClick = abrir, enabled = habilitado, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
                 o.tipo,
@@ -78,7 +112,24 @@ fun OportunidadCard(o: OportunidadEntity, abrir: () -> Unit) {
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(o.estado, style = MaterialTheme.typography.labelLarge)
-            Text("Consultar / editar →", color = MaterialTheme.colorScheme.primary)
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Abajo a la izquierda, separado de la acción principal para evitar toques por error.
+                TextButton(
+                    onClick = eliminar,
+                    enabled = habilitado,
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Text(
+                        if (eliminando) "Eliminando…" else "Eliminar",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+                Text("Consultar / editar →", color = MaterialTheme.colorScheme.primary)
+            }
         }
     }
 }
@@ -90,23 +141,37 @@ private val ejemplo = OportunidadEntity(
     "Actividad de demostración",
     "Sitio público de prueba",
     "Alta",
-    "Alto"
+    "Alto",
+    estado = "Evento identificado",
+    observaciones = "ninguna",
+    responsable = "Mucnicipalidad ",
+    fechaDeteccion = 0L,
+    ultimaActualizacion = 0L,
+    referenciaGeografica = ""
 )
 
 @Preview(showBackground = true)
 @Composable
 private fun ListaPreview() {
-    Caso_DSY1105_007D_Gestion_movil_de_oportunidadesTheme { ListaOportunidadesScreen(ListaUiState(listOf(ejemplo), false), {}, {}, {}) }
+    Caso_DSY1105_007D_Gestion_movil_de_oportunidadesTheme { ListaOportunidadesScreen(ListaUiState(listOf(ejemplo), false), {}, {}, {}, {}) }
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun ListaVaciaPreview() {
-    Caso_DSY1105_007D_Gestion_movil_de_oportunidadesTheme { ListaOportunidadesScreen(ListaUiState(cargando = false), {}, {}, {}) }
+    Caso_DSY1105_007D_Gestion_movil_de_oportunidadesTheme { ListaOportunidadesScreen(ListaUiState(cargando = false), {}, {}, {}, {}) }
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun CardPreview() {
-    Caso_DSY1105_007D_Gestion_movil_de_oportunidadesTheme { OportunidadCard(ejemplo, {}) }
+    Caso_DSY1105_007D_Gestion_movil_de_oportunidadesTheme { OportunidadCard(ejemplo, abrir = {}, eliminar = {}) }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CardEliminandoPreview() {
+    Caso_DSY1105_007D_Gestion_movil_de_oportunidadesTheme {
+        OportunidadCard(ejemplo, abrir = {}, eliminar = {}, eliminando = true, habilitado = false)
+    }
 }

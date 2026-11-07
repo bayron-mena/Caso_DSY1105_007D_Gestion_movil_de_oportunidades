@@ -11,10 +11,22 @@ data class OportunidadUiState(
     val estado: String = "Evento identificado",
     val observaciones: String = "",
     val referenciaGeografica: String = "",
-    val errores: Map<String, String> = emptyMap(),
+    val fechaDeteccion: Long? = null,
+    val eliminando: Boolean = false,
+
+    val nombreError: String? = null,
+    val tipoError: String? = null,
+    val descripcionError: String? = null,
+    val fuenteError: String? = null,
+    val prioridadError: String? = null,
+    val potencialError: String? = null,
+    val estadoError: String? = null,
+
+
     val cargando: Boolean = false,
     val guardando: Boolean = false,
     val guardadoExitosamente: Boolean = false,
     val mensaje: String? = null,
+    val eliminadoExitosamente: Boolean = false,
     val cargaFallida: Boolean = false
 )

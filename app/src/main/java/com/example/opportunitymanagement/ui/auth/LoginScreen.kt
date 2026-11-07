@@ -5,11 +5,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.opportunitymanagement.ui.theme.Caso_DSY1105_007D_Gestion_movil_de_oportunidadesTheme
 import com.example.opportunitymanagement.viewmodel.LoginUiState
+import com.example.opportunitymanagement.R
 
 @Composable
 fun LoginScreen(
@@ -27,7 +29,7 @@ fun LoginScreen(
         modifier = modifier
     ) {
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
-            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(Modifier.padding(dimensionResource(R.dimen.margin_normal)), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text(
                     "ACCEDE A TU CUENTA",
                     style = MaterialTheme.typography.labelLarge,

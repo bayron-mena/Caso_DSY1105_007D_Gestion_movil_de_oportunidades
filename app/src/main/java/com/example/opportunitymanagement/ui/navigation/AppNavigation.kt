@@ -1,5 +1,7 @@
 package com.example.opportunitymanagement.ui.navigation
 
+import com.example.opportunitymanagement.viewmodel.ListaViewModel
+import com.example.opportunitymanagement.viewmodel.OportunidadValidator
 import com.example.opportunitymanagement.viewmodel.OportunidadViewModel
 import android.Manifest
 import android.content.pm.PackageManager
@@ -82,26 +84,42 @@ fun AppNavigation(repository: OportunidadRepository, authRepository: AuthReposit
                 })
         }
         composable("lista") {
-            val vm: OportunidadViewModel =
-                viewModel(factory = viewModelFactory { initializer { OportunidadViewModel(repository) } })
-            val lista by vm.lista.collectAsStateWithLifecycle()
+            val vm: ListaViewModel =
+                viewModel(factory = viewModelFactory { initializer { ListaViewModel(repository) } })
+            val lista by vm.uiState.collectAsStateWithLifecycle()
             ListaOportunidadesScreen(
                 lista,
                 { nav.navigate("form/0") },
                 { nav.navigate("form/$it") },
+                vm::eliminar,
                 { nav.popBackStack() })
         }
         composable("form/{id}") { entry ->
             val vm: OportunidadViewModel =
-                viewModel(factory = viewModelFactory { initializer { OportunidadViewModel(repository) } })
-            val s by vm.estado.collectAsStateWithLifecycle()
+                viewModel(factory = viewModelFactory {
+                    initializer { OportunidadViewModel(repository, OportunidadValidator()) }
+                })
+            val s by vm.uiState.collectAsStateWithLifecycle()
             LaunchedEffect(Unit) {
                 vm.cargar(
                     entry.arguments?.getString("id")?.toLongOrNull() ?: 0
                 )
             }
             LaunchedEffect(s.guardadoExitosamente) { if (s.guardadoExitosamente) nav.popBackStack() }
-            OportunidadFormScreen(s, vm::cambiar, vm::guardar, { nav.popBackStack() })
+            OportunidadFormScreen(
+                s = s,
+                onNombreChange = vm::onNombreChange,
+                onTipoChange = vm::onTipoChange,
+                onDescripcionChange = vm::onDescripcionChange,
+                onFuenteChange = vm::onFuenteChange,
+                onPrioridadChange = vm::onPrioridadChange,
+                onPotencialChange = vm::onPotencialChange,
+                onEstadoChange = vm::onEstadoChange,
+                onObservacionesChange = vm::onObservacionesChange,
+                onReferenciaGeograficaChange = vm::onReferenciaGeograficaChange,
+                guardar = vm::guardar,
+                volver = { nav.popBackStack() }
+            )
         }
         composable("qr") { QrScreen({ nav.navigate("form/$it") }, { nav.popBackStack() }) }
     }

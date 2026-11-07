@@ -5,5 +5,7 @@ import com.example.opportunitymanagement.data.local.OportunidadEntity
 data class ListaUiState(
     val items: List<OportunidadEntity> = emptyList(),
     val cargando: Boolean = true,
-    val error: String? = null
+    val error: String? = null,
+    val eliminandoId: Long? = null,
+    val mensaje: String? = null
 )

@@ -10,8 +10,13 @@ interface OportunidadDao {
 
     @Query("SELECT * FROM oportunidades WHERE id = :id")
     suspend fun buscar(id: Long): OportunidadEntity?
+
     @Insert
     suspend fun insertar(item: OportunidadEntity): Long
+
     @Update
     suspend fun actualizar(item: OportunidadEntity): Int
+
+    @Query(value = "DELETE FROM oportunidades where id = :id")
+    suspend fun eliminar(id : Long): Int
 }

@@ -1,0 +1,26 @@
+Verificación: sesión persistente en Room + inyección manual (AppContainer)
+Fecha: 2026-11-17
+
+== PRUEBAS EJECUTADAS ==
+Comando: gradlew :app:assembleDebug :app:assembleDebugAndroidTest :app:testDebugUnitTest
+Resultado: BUILD SUCCESSFUL
+
+Pruebas unitarias (todas sin fallos):
+  SessionViewModelTest            4/4  (verificando -> con/sin sesión, cerrar sesión, error de lectura)
+  OportunidadViewModelTest       10/10 (incluye nueva: sin sesión no guarda y pide iniciar sesión)
+  ListaViewModelTest              6/6
+  OportunidadRemoteRepositoryTest 6/6
+  ValidacionTest                  5/5
+  ExampleUnitTest                 1/1
+
+Migración 4 -> 5: el SQL de MIGRATION_4_5 coincide con createSql de la tabla `sesion`
+y de su índice en app/schemas/.../AppDatabase/5.json (generado por Room).
+
+== COMPROBACIONES PENDIENTES (requieren dispositivo o emulador; no había ninguno conectado) ==
+- Pruebas instrumentadas compiladas pero NO ejecutadas:
+  SessionRepositoryTest (nueva), AuthScreensTest, EntregaTest, AuthRepositoryTest.
+  Ejecutar: gradlew :app:connectedDebugAndroidTest
+- Prueba manual: iniciar sesión, cerrar la app desde recientes y reabrir -> debe abrir el menú
+  con el nombre del usuario sin pasar por el login.
+- Prueba manual: "Cerrar sesión" -> vuelve al login; al reabrir la app sigue en el login.
+- Actualizar una instalación con base v4 para confirmar la migración en un dispositivo real.

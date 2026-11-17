@@ -9,6 +9,8 @@ import androidx.room.Room
 import androidx.test.platform.app.InstrumentationRegistry
 import com.example.opportunitymanagement.data.local.AppDatabase
 import com.example.opportunitymanagement.data.repository.AuthRepository
+import com.example.opportunitymanagement.data.repository.SessionRepository
+import com.example.opportunitymanagement.domain.usecase.LoginUseCase
 import com.example.opportunitymanagement.ui.auth.LoginScreen
 import com.example.opportunitymanagement.ui.auth.RegisterScreen
 import com.example.opportunitymanagement.ui.theme.Caso_DSY1105_007D_Gestion_movil_de_oportunidadesTheme
@@ -37,7 +39,7 @@ class AuthScreensTest {
             AppDatabase::class.java
         ).build()
         val repository = AuthRepository(database)
-        login = LoginViewModel(repository)
+        login = LoginViewModel(LoginUseCase(repository, SessionRepository(database.sesion())))
         register = RegisterViewModel(repository)
     }
 

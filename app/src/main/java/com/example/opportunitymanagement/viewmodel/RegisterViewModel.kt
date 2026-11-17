@@ -2,6 +2,9 @@ package com.example.opportunitymanagement.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.opportunitymanagement.di.appContainer
 import com.example.opportunitymanagement.data.repository.AuthRepository
 import com.example.opportunitymanagement.data.repository.EmailAlreadyRegisteredException
 import kotlinx.coroutines.CancellationException
@@ -102,5 +105,11 @@ class RegisterViewModel(private val repository: AuthRepository) : ViewModel() {
 
     fun reset() {
         if (!_uiState.value.isSaving) _uiState.value = RegisterUiState()
+    }
+
+    companion object {
+        val Factory = viewModelFactory {
+            initializer { RegisterViewModel(appContainer().authRepository) }
+        }
     }
 }

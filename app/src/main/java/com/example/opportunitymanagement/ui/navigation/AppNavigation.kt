@@ -1,7 +1,6 @@
 package com.example.opportunitymanagement.ui.navigation
 
 import com.example.opportunitymanagement.viewmodel.ListaViewModel
-import com.example.opportunitymanagement.viewmodel.OportunidadValidator
 import com.example.opportunitymanagement.viewmodel.OportunidadViewModel
 import android.Manifest
 import android.content.pm.PackageManager
@@ -11,45 +10,48 @@ import androidx.core.content.ContextCompat
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.compose.*
-import com.example.opportunitymanagement.data.repository.AuthRepository
-import com.example.opportunitymanagement.data.repository.OportunidadRepository
 import com.example.opportunitymanagement.ui.auth.LoginScreen
 import com.example.opportunitymanagement.ui.auth.RegisterScreen
 import com.example.opportunitymanagement.ui.opportunities.*
 import com.example.opportunitymanagement.ui.theme.Caso_DSY1105_007D_Gestion_movil_de_oportunidadesTheme
 import com.example.opportunitymanagement.utils.QrScanner
-import com.example.opportunitymanagement.viewmodel.AuthViewModelFactory
 import com.example.opportunitymanagement.viewmodel.LoginViewModel
 import com.example.opportunitymanagement.viewmodel.RegisterViewModel
+import com.example.opportunitymanagement.viewmodel.SessionUiState
 
+private val RUTAS_PUBLICAS = setOf("login", "registro")
+
+/**
+ * Grafo de navegación. La sesión llega desde [SessionUiState] (Room): al iniciar sesión se
+ * pasa al menú y al cerrarla (o si la cuenta se desactiva) se vuelve al login.
+ */
 @Composable
-fun AppNavigation(repository: OportunidadRepository, authRepository: AuthRepository) {
+fun AppNavigation(session: SessionUiState, onLogout: () -> Unit) {
     val nav = rememberNavController()
-    val authFactory = remember(authRepository) { AuthViewModelFactory(authRepository) }
-    // Sesión de la navegación: id y nombre del usuario autenticado, null si no hay sesión.
-    var usuarioId by rememberSaveable { mutableStateOf<Long?>(null) }
-    var usuario by rememberSaveable { mutableStateOf<String?>(null) }
-    NavHost(nav, startDestination = "login") {
+    // El destino inicial se decide una sola vez, con la sesión ya verificada.
+    val inicio = remember { if (session.usuario != null) "menu" else "login" }
+    val autenticado = session.usuario != null
+    LaunchedEffect(autenticado) {
+        val actual = nav.currentDestination?.route ?: return@LaunchedEffect
+        val enRutaPublica = actual in RUTAS_PUBLICAS
+        when {
+            autenticado && enRutaPublica ->
+                nav.navigate("menu") { popUpTo(nav.graph.id) { inclusive = true } }
+            !autenticado && !enRutaPublica ->
+                nav.navigate("login") { popUpTo(nav.graph.id) { inclusive = true } }
+        }
+    }
+    NavHost(nav, startDestination = inicio) {
         composable("login") {
-            val vm: LoginViewModel = viewModel(factory = authFactory)
+            val vm: LoginViewModel = viewModel(factory = LoginViewModel.Factory)
             val state by vm.uiState.collectAsStateWithLifecycle()
-            LaunchedEffect(state.authenticatedUser?.id) {
-                state.authenticatedUser?.let {
-                    usuarioId = it.id
-                    usuario = it.nombre
-                    nav.navigate("menu") { popUpTo("login") { inclusive = true } }
-                }
-            }
             LoginScreen(
                 state = state,
                 onEmailChanged = vm::onEmailChanged,
@@ -59,7 +61,7 @@ fun AppNavigation(repository: OportunidadRepository, authRepository: AuthReposit
             )
         }
         composable("registro") {
-            val vm: RegisterViewModel = viewModel(factory = authFactory)
+            val vm: RegisterViewModel = viewModel(factory = RegisterViewModel.Factory)
             val state by vm.uiState.collectAsStateWithLifecycle()
             RegisterScreen(
                 state = state,
@@ -77,18 +79,14 @@ fun AppNavigation(repository: OportunidadRepository, authRepository: AuthReposit
         }
         composable("menu") {
             MenuScreen(
-                usuario.orEmpty(),
+                session.usuario?.nombre.orEmpty(),
                 { nav.navigate("lista") },
                 { nav.navigate("qr") },
-                {
-                    usuarioId = null
-                    usuario = null
-                    nav.navigate("login") { popUpTo("menu") { inclusive = true } }
-                })
+                onLogout
+            )
         }
         composable("lista") {
-            val vm: ListaViewModel =
-                viewModel(factory = viewModelFactory { initializer { ListaViewModel(repository) } })
+            val vm: ListaViewModel = viewModel(factory = ListaViewModel.Factory)
             val lista by vm.uiState.collectAsStateWithLifecycle()
             ListaOportunidadesScreen(
                 lista,
@@ -98,20 +96,7 @@ fun AppNavigation(repository: OportunidadRepository, authRepository: AuthReposit
                 { nav.popBackStack() })
         }
         composable("form/{id}") { entry ->
-            // Sin sesión no se puede asignar un responsable: se vuelve al login.
-            val idSesion = usuarioId
-            if (idSesion == null) {
-                LaunchedEffect(Unit) {
-                    nav.navigate("login") { popUpTo(nav.graph.id) { inclusive = true } }
-                }
-                return@composable
-            }
-            val vm: OportunidadViewModel =
-                viewModel(factory = viewModelFactory {
-                    initializer {
-                        OportunidadViewModel(repository, OportunidadValidator(), idSesion)
-                    }
-                })
+            val vm: OportunidadViewModel = viewModel(factory = OportunidadViewModel.Factory)
             val s by vm.uiState.collectAsStateWithLifecycle()
             LaunchedEffect(Unit) {
                 vm.cargar(

@@ -7,13 +7,15 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(entities = [OportunidadEntity::class,
                       UsuarioEntity::class,
-                      CredentialEntity::class],
-    version = 4,
+                      CredentialEntity::class,
+                      SesionEntity::class],
+    version = 5,
     exportSchema = true)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun oportunidades(): OportunidadDao
     abstract fun usuarios(): UsuarioDao
     abstract fun credenciales(): CredentialDao
+    abstract fun sesion(): SesionDao
 
     companion object {
         /**
@@ -52,6 +54,20 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** v5: tabla de sesión de una sola fila para recordar al usuario autenticado. */
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `sesion` (" +
+                        "`id` INTEGER NOT NULL, `userId` INTEGER NOT NULL, " +
+                        "`iniciadaEn` INTEGER NOT NULL, PRIMARY KEY(`id`), " +
+                        "FOREIGN KEY(`userId`) REFERENCES `usuario`(`id`) " +
+                        "ON UPDATE NO ACTION ON DELETE CASCADE )"
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_sesion_userId` ON `sesion` (`userId`)")
+            }
+        }
+
         @Volatile
         private var instancia: AppDatabase? = null
         fun obtener(context: Context): AppDatabase = instancia ?: synchronized(this) {
@@ -59,7 +75,7 @@ abstract class AppDatabase : RoomDatabase() {
                 context.applicationContext,
                 AppDatabase::class.java,
                 "oportunidades.db"
-            ).addMigrations(MIGRATION_3_4)
+            ).addMigrations(MIGRATION_3_4, MIGRATION_4_5)
                 .build().also { instancia = it }
         }
     }

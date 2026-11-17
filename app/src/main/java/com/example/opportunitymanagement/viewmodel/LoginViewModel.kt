@@ -2,14 +2,17 @@ package com.example.opportunitymanagement.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.opportunitymanagement.data.repository.AuthRepository
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.opportunitymanagement.di.appContainer
+import com.example.opportunitymanagement.domain.usecase.LoginUseCase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class LoginViewModel(private val repository: AuthRepository) : ViewModel() {
+class LoginViewModel(private val login: LoginUseCase) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState = _uiState.asStateFlow()
 
@@ -51,7 +54,7 @@ class LoginViewModel(private val repository: AuthRepository) : ViewModel() {
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             try {
-                val user = repository.login(state.email, state.password)
+                val user = login(state.email, state.password)
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -79,5 +82,11 @@ class LoginViewModel(private val repository: AuthRepository) : ViewModel() {
 
     fun reset() {
         if (!_uiState.value.isLoading) _uiState.value = LoginUiState()
+    }
+
+    companion object {
+        val Factory = viewModelFactory {
+            initializer { LoginViewModel(appContainer().loginUseCase) }
+        }
     }
 }

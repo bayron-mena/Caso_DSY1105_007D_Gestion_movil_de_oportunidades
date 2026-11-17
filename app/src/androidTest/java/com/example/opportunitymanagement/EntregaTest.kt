@@ -9,9 +9,18 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
 import org.junit.Assert.*
+import org.junit.rules.ExternalResource
+import org.junit.rules.RuleChain
 import java.io.File
 class EntregaTest {
- @get:Rule val compose = createAndroidComposeRule<MainActivity>()
+ private val compose = createAndroidComposeRule<MainActivity>()
+ // La sesión persiste en Room: se cierra antes de abrir la Activity para partir siempre del login.
+ private val sinSesion = object : ExternalResource() {
+  override fun before() = runBlocking {
+   AppDatabase.obtener(InstrumentationRegistry.getInstrumentation().targetContext).sesion().cerrar()
+  }
+ }
+ @get:Rule val reglas: RuleChain = RuleChain.outerRule(sinSesion).around(compose)
  private fun foto(nombre: String) {
   compose.waitForIdle()
   val instrumentation = InstrumentationRegistry.getInstrumentation()

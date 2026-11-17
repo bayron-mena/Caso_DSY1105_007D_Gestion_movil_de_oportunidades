@@ -2,6 +2,9 @@ package com.example.opportunitymanagement.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.opportunitymanagement.di.appContainer
 import com.example.opportunitymanagement.data.repository.OportunidadRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -51,6 +54,12 @@ class ListaViewModel(
             } finally {
                 eliminandoId.update { if (it == id) null else it }
             }
+        }
+    }
+
+    companion object {
+        val Factory = viewModelFactory {
+            initializer { ListaViewModel(appContainer().oportunidadRepository) }
         }
     }
 }

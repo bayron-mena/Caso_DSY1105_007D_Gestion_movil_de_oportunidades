@@ -3,11 +3,16 @@ package com.example.opportunitymanagement.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.opportunitymanagement.data.local.OportunidadEntity
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.opportunitymanagement.di.appContainer
 import com.example.opportunitymanagement.data.repository.OportunidadRepository
+import com.example.opportunitymanagement.domain.usecase.ObservarSesionUseCase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -15,7 +20,7 @@ class OportunidadViewModel(
     private val repository: OportunidadRepository,
     private val validator: OportunidadValidator,
     // Usuario con sesión iniciada: será el responsable de las oportunidades nuevas.
-    private val usuarioId: Long
+    private val observarSesion: ObservarSesionUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(OportunidadUiState())
@@ -163,6 +168,18 @@ class OportunidadViewModel(
 
         viewModelScope.launch {
             try {
+                // Al editar se conserva el responsable; una oportunidad nueva
+                // (o una antigua sin responsable) queda a cargo de quien la guarda.
+                val responsableId = estadoActual.responsableId ?: observarSesion().first()?.id
+                if (responsableId == null) {
+                    _uiState.update {
+                        it.copy(
+                            guardando = false,
+                            mensaje = "Tu sesión terminó. Vuelve a iniciar sesión."
+                        )
+                    }
+                    return@launch
+                }
                 repository.guardar(
                     OportunidadEntity(
                         id = estadoActual.id,
@@ -175,9 +192,7 @@ class OportunidadViewModel(
                         estado = estadoActual.estado,
                         observaciones = estadoActual.observaciones.trim(),
                         fechaDeteccion = fechaDeteccion,
-                        // Al editar se conserva el responsable; una oportunidad nueva
-                        // (o una antigua sin responsable) queda a cargo de quien la guarda.
-                        responsableId = estadoActual.responsableId ?: usuarioId,
+                        responsableId = responsableId,
                         referenciaGeografica = estadoActual.referenciaGeografica
                     )
                 )
@@ -196,4 +211,16 @@ class OportunidadViewModel(
         }
     }
 
+    companion object {
+        val Factory = viewModelFactory {
+            initializer {
+                val container = appContainer()
+                OportunidadViewModel(
+                    container.oportunidadRepository,
+                    OportunidadValidator(),
+                    container.observarSesionUseCase
+                )
+            }
+        }
+    }
 }

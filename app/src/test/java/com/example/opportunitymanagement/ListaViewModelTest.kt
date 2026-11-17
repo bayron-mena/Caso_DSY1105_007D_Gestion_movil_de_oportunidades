@@ -1,6 +1,7 @@
 package com.example.opportunitymanagement
 
 import androidx.lifecycle.viewModelScope
+import com.example.opportunitymanagement.data.local.OportunidadConResponsable
 import com.example.opportunitymanagement.data.local.OportunidadDao
 import com.example.opportunitymanagement.data.local.OportunidadEntity
 import com.example.opportunitymanagement.data.repository.OportunidadRepository
@@ -11,6 +12,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -47,7 +49,7 @@ class ListaViewModelTest {
         advanceUntilIdle()
 
         assertFalse(viewModel.uiState.value.cargando)
-        assertEquals(listOf("Feria"), viewModel.uiState.value.items.map { it.nombre })
+        assertEquals(listOf("Feria"), viewModel.uiState.value.items.map { it.oportunidad.nombre })
 
         items.value = items.value + oportunidad(2, "Evento")
         advanceUntilIdle()
@@ -79,7 +81,7 @@ class ListaViewModelTest {
         viewModel.eliminar(1)
         advanceUntilIdle()
 
-        assertEquals(listOf("Evento"), viewModel.uiState.value.items.map { it.nombre })
+        assertEquals(listOf("Evento"), viewModel.uiState.value.items.map { it.oportunidad.nombre })
         assertNull(viewModel.uiState.value.eliminandoId)
         assertNull(viewModel.uiState.value.mensaje)
         recolector.cancel()
@@ -116,7 +118,8 @@ class ListaViewModelTest {
         private val alEliminar: (Long) -> Int = { 1 }
     ) : OportunidadDao {
         var eliminaciones = 0
-        override fun observarTodas() = items
+        override fun observarTodas() =
+            items.map { lista -> lista.map { OportunidadConResponsable(it, responsableNombre = null) } }
         override suspend fun buscar(id: Long): OportunidadEntity? = null
         override suspend fun insertar(item: OportunidadEntity): Long = 1
         override suspend fun actualizar(item: OportunidadEntity): Int = 1

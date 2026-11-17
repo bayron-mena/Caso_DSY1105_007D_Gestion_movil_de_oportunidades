@@ -13,7 +13,9 @@ import kotlinx.coroutines.launch
 
 class OportunidadViewModel(
     private val repository: OportunidadRepository,
-    private val validator: OportunidadValidator
+    private val validator: OportunidadValidator,
+    // Usuario con sesión iniciada: será el responsable de las oportunidades nuevas.
+    private val usuarioId: Long
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(OportunidadUiState())
@@ -95,7 +97,8 @@ class OportunidadViewModel(
                     estado = oportunidad.estado,
                     observaciones = oportunidad.observaciones,
                     referenciaGeografica = oportunidad.referenciaGeografica,
-                    fechaDeteccion = oportunidad.fechaDeteccion
+                    fechaDeteccion = oportunidad.fechaDeteccion,
+                    responsableId = oportunidad.responsableId
                 )
             } catch (exception: CancellationException) {
                 throw exception
@@ -172,6 +175,9 @@ class OportunidadViewModel(
                         estado = estadoActual.estado,
                         observaciones = estadoActual.observaciones.trim(),
                         fechaDeteccion = fechaDeteccion,
+                        // Al editar se conserva el responsable; una oportunidad nueva
+                        // (o una antigua sin responsable) queda a cargo de quien la guarda.
+                        responsableId = estadoActual.responsableId ?: usuarioId,
                         referenciaGeografica = estadoActual.referenciaGeografica
                     )
                 )

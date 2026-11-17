@@ -36,7 +36,8 @@ import com.example.opportunitymanagement.viewmodel.RegisterViewModel
 fun AppNavigation(repository: OportunidadRepository, authRepository: AuthRepository) {
     val nav = rememberNavController()
     val authFactory = remember(authRepository) { AuthViewModelFactory(authRepository) }
-    // Sesión de la navegación: nombre del usuario autenticado, null si no hay sesión.
+    // Sesión de la navegación: id y nombre del usuario autenticado, null si no hay sesión.
+    var usuarioId by rememberSaveable { mutableStateOf<Long?>(null) }
     var usuario by rememberSaveable { mutableStateOf<String?>(null) }
     NavHost(nav, startDestination = "login") {
         composable("login") {
@@ -44,6 +45,7 @@ fun AppNavigation(repository: OportunidadRepository, authRepository: AuthReposit
             val state by vm.uiState.collectAsStateWithLifecycle()
             LaunchedEffect(state.authenticatedUser?.id) {
                 state.authenticatedUser?.let {
+                    usuarioId = it.id
                     usuario = it.nombre
                     nav.navigate("menu") { popUpTo("login") { inclusive = true } }
                 }
@@ -79,6 +81,7 @@ fun AppNavigation(repository: OportunidadRepository, authRepository: AuthReposit
                 { nav.navigate("lista") },
                 { nav.navigate("qr") },
                 {
+                    usuarioId = null
                     usuario = null
                     nav.navigate("login") { popUpTo("menu") { inclusive = true } }
                 })
@@ -95,9 +98,19 @@ fun AppNavigation(repository: OportunidadRepository, authRepository: AuthReposit
                 { nav.popBackStack() })
         }
         composable("form/{id}") { entry ->
+            // Sin sesión no se puede asignar un responsable: se vuelve al login.
+            val idSesion = usuarioId
+            if (idSesion == null) {
+                LaunchedEffect(Unit) {
+                    nav.navigate("login") { popUpTo(nav.graph.id) { inclusive = true } }
+                }
+                return@composable
+            }
             val vm: OportunidadViewModel =
                 viewModel(factory = viewModelFactory {
-                    initializer { OportunidadViewModel(repository, OportunidadValidator()) }
+                    initializer {
+                        OportunidadViewModel(repository, OportunidadValidator(), idSesion)
+                    }
                 })
             val s by vm.uiState.collectAsStateWithLifecycle()
             LaunchedEffect(Unit) {

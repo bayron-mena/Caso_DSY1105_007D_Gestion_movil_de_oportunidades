@@ -14,7 +14,7 @@ data class OportunidadDto(
     val potencial: String,
     val estado: String,
     val observaciones: String? = null,
-    val responsable: String? = null,
+    val responsableId: Long? = null,
     val fechaDeteccion: Long? = null,
     val ultimaActualizacion: Long? = null,
     val referenciaGeografica: String? = null
@@ -30,7 +30,7 @@ fun OportunidadEntity.toDto() = OportunidadDto(
     potencial = potencial,
     estado = estado,
     observaciones = observaciones,
-    responsable = responsable,
+    responsableId = responsableId,
     fechaDeteccion = fechaDeteccion,
     ultimaActualizacion = ultimaActualizacion,
     referenciaGeografica = referenciaGeografica
@@ -48,7 +48,7 @@ fun OportunidadDto.toEntity(): OportunidadEntity {
         potencial = potencial,
         estado = estado,
         observaciones = observaciones.orEmpty(),
-        responsable = responsable ?: "Ejecutivo de prueba",
+        responsableId = responsableId,
         fechaDeteccion = fechaDeteccion ?: ahora,
         ultimaActualizacion = ultimaActualizacion ?: ahora,
         referenciaGeografica = referenciaGeografica.orEmpty()

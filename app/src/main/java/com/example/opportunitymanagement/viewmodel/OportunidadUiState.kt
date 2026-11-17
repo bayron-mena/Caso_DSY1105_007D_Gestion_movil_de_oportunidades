@@ -12,6 +12,8 @@ data class OportunidadUiState(
     val observaciones: String = "",
     val referenciaGeografica: String = "",
     val fechaDeteccion: Long? = null,
+    // Responsable guardado en la oportunidad; null mientras sea nueva.
+    val responsableId: Long? = null,
     val eliminando: Boolean = false,
 
     val nombreError: String? = null,
